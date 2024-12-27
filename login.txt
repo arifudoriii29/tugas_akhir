@@ -1,0 +1,33 @@
+/// <reference types="cypress"/>
+
+import loginPage from "../../tugas_akhir/login/POMlogin.cy";
+
+describe('Login Feature',() => {
+    it('User Login with Valid credentials',() => {
+        cy.visit('https://opensource-demo.orangehrmlive.com/web/index.php/auth/login');
+        loginPage.textLogin().should('have.text','Login');
+        loginPage.inputUsername().type('Admin');
+        loginPage.inputPassword().type('admin123');
+        cy.intercept("GET","**/employees/action-summary").as("actionSummary");
+        loginPage.buttonLogin().click();
+        cy.wait("@actionSummary").then((intercept)=> {
+            expect(intercept.response.statusCode).to.equal(200);       
+            loginPage.menuDashboard().should('have.text','Dashboard');
+            loginPage.menuDirectory().click();
+            cy.url().should('include', '/directory/viewDirectory');
+            cy.get('.oxd-text').contains('Directory').should('be.visible');
+            cy.get('input[placeholder="Type for hints..."]').type('Rebecca');
+            cy.wait(1000);
+            cy.get('.oxd-autocomplete-dropdown').contains('Rebecca Harmony').click();
+            cy.get('.oxd-select-text').eq(0).click();
+            cy.get('.oxd-select-option').contains('QA Engineer').click();
+            cy.get('.oxd-select-text').eq(1).click();
+            cy.get('.oxd-select-option').contains('Texas R&D').click();
+            cy.get('button').contains('Search').click();
+            cy.get('.orangehrm-directory-card').should('be.visible');
+            cy.get('.oxd-text').contains('Rebecca').should('be.visible');
+            cy.get('.oxd-text').contains('QA Engineer').should('be.visible');
+            cy.get('.oxd-text').contains('Texas R&D').should('be.visible');
+        });
+    });
+});
